@@ -1,0 +1,85 @@
+<?php
+
+class Response {
+
+    private $status_code;
+    private $text;
+    private $isJson;
+
+    /**
+     * Construct a new Response object.
+     *
+     * @param int $status_code The HTTP status code.
+     * @param mixed $text The content of the response. 
+     * @param bool $isJson Optional. True if the format of the response is JSON.
+     */
+    function __construct($status_code, $text, $isJson = false) {
+        $this->status_code = $status_code;
+        $this->text = $text;
+        $this->isJson = $isJson;
+    }
+
+    /**
+     * Display the response.
+     */
+    public function __toString(){
+        if($this->isJson)
+            header('Content-Type: application/json');
+
+        http_response_code($this->status_code);
+
+        return $this->text;
+    }
+
+    /**
+     * Create a new Response with JSON content.
+     *
+     * @param array $array The content of the response as an array. 
+     * @return Response The created reponse object.
+     */
+    public static function json($array){
+        return new Response(200, json_encode($array), true);
+    }
+
+    /**
+     * Creates a response with only an HTTP status code and an information message.
+     *
+     * @param int $code The HTTP status code.
+     * @param string $message The content of the message. 
+     * @return Response The created reponse object.
+     */
+    public static function status_code($code, $message = ''){
+        if($message == ''){
+            switch ($code) {
+                case 200:
+                    $message = 'OK';
+                    break;
+                case 201:
+                    $message = 'Created';
+                    break;
+                case 304:
+                    $message = 'Not Modified';
+                    break;
+                case 400:
+                    $message = 'Bad Request';
+                    break;
+                case 401:
+                    $message = 'Unauthorized';
+                    break;
+                case 403:
+                    $message = 'Forbidden';
+                    break;
+                case 404:
+                    $message = 'Not Found';
+                    break;
+                case 500:
+                    $message = 'Internal Server Error';
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        return new Response($code, json_encode(array('code' => $code, 'message' => $message)), true);
+    }
+}

@@ -1,0 +1,140 @@
+<?php
+
+class Router {
+    private $routes = array(
+        "GET" => array(),
+        "POST" => array(),
+        "PUT" => array(),
+        "DELETE" => array()
+    );
+
+    /**
+     * Add a new route to the $routes array.
+     *
+     * @param string $action The route as a string.
+     * @param Closure $callback The callback function.
+     * @param string $method The HTTP method (GET, POST, PUT, DELETE).
+     */
+    private function add_route($action, Closure $callback, $method)
+    { 
+        $action = preg_quote($action);
+        
+        // Replace the routes parameters identifiers by regular expressions
+        // e.g. "/user/{id}/name"  ->  "#^/user/(?P<id>[A-Za-z0-9_\-]+)/name$#"
+        $action = preg_replace('/\\\{([a-zA-Z0-9]+)\\\}/', '(?P<$1>[A-Za-z0-9_\-]+)', $action);
+        $action = "#^" . $action . "$#";
+
+        // Save the route
+        $this->routes[$method][$action] = $callback;
+
+
+    }
+
+    // Alias to add routes
+    public function get($action, Closure $callback) { $this->add_route($action, $callback, 'GET'); }
+
+    public function post($action, Closure $callback) { $this->add_route($action, $callback, 'POST'); }
+
+    public function put($action, Closure $callback) { $this->add_route($action, $callback, 'PUT'); }
+
+    public function delete($action, Closure $callback) { $this->add_route($action, $callback, 'DELETE'); }
+
+
+    /**
+     * Dispatch the current request to the corresponding route.
+     */
+    public function dispatch()
+    {
+        // Get the request URI
+        $action = $_SERVER['REQUEST_URI'];
+        
+        // Get the HTTP method
+        $request_method = $_SERVER['REQUEST_METHOD'];
+
+        // Get the request body as an array
+        $request_input = array();
+        parse_str(file_get_contents('php://input'), $request_input);
+
+        $routes = $this->routes[$request_method];
+
+        // Remove the starting part of the request
+        $action = str_replace(SITE_ROOT, "/", $action);
+
+        // Go through $routes to find a route matching the request
+        foreach($routes as $route => $callback){
+            if(preg_match($route, $action, $matches)){
+                
+                // List the routes parameters
+                $named_matches = [];
+                foreach ($matches as $k => $v) {
+                    if (!is_int($k)) {
+                        $named_matches[$k] = $v;
+                    }
+                }
+                
+                // Get the name of the expected parameters of the callback function as a list
+                $params_list = $this->getParams($callback);
+                $nb_params = sizeof($params_list);
+                $post_input_index = -1;
+                
+                // Check if the $_post variable is required
+                for($i = 0; $i < $nb_params; $i++){
+                    if($params_list[$i] == '_post'){
+                        $post_input_index = $i;
+                        break;
+                    }
+                }
+
+                // Check if the number of routes parameters matches the number of expected parameters of the callback function
+                if(count($named_matches) != (($post_input_index != -1) ? $nb_params - 1 : $nb_params)){
+                    echo Response::status_code(500, "The number of parameters expected in the callback function does not match.");
+                    die;
+                }
+                
+                // Save the routes parameters and the request input (if required) into $params 
+                $i = 0;
+                $params = [];
+                foreach($named_matches as $param){
+                    if($i == $post_input_index)
+                        array_push($params, $request_input);
+
+                    array_push($params, $param);
+                    
+                    $i++;
+                }
+
+                if(empty($params) && $post_input_index != -1)
+                    array_push($params, $request_input);
+
+                // Call the callback function
+                echo call_user_func_array($callback, $params);
+                die;
+            }
+        }
+
+        echo Response::status_code(404, "No Route Found");
+        die;
+    }
+
+    /**
+     * Return the list of the parameters of a callable object.
+     *
+     * @param Closure $callable The callable object.
+     * @return array The list of the parameters of the callable object.
+     */
+    private function getParams($callable)
+    {
+        $CReflection = is_array($callable) ? 
+        new ReflectionMethod($callable[0], $callable[1]) : 
+        new ReflectionFunction($callable);
+
+        $params = array();
+        foreach ($CReflection->getParameters() as $param) {
+            $params[] = $param->name;   
+        }
+        return $params;
+    }
+
+} 
+
+?>

@@ -1,0 +1,85 @@
+<?php
+
+class Database {
+
+    private $pdo;
+
+    /**
+     * Construct a new Database object with a $pdo attribute.
+     */
+    function __construct() {
+        $host = DB_HOST . ':' . DB_PORT;
+        $db   = DB_NAME;
+        $user = DB_USER;
+        $pass = DB_PASSWORD;
+        $charset = 'utf8mb4';
+
+        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+        try {
+            $this->pdo = new PDO($dsn, $user, $pass);
+        } catch (\PDOException $e) {
+            throw new \PDOException($e->getMessage(), (int)$e->getCode());
+        }
+    }
+
+    /**
+     * Execute a select SQL query.
+     *
+     * @param string $request The SQL query string.
+     * @param array $params Optional. The parameters used inside the query.
+     * @return array The results as an array.
+     */
+    public function select($request, $params = array()){
+        $stmt = $this->pdo->prepare($request);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Execute an insert SQL query.
+     *
+     * @param string $request The SQL query string.
+     * @param array $params Optional. The parameters used inside the query.
+     * @return bool True if insertion was successful, False if not.
+     */
+    public function insert($request, $params = array()){ 
+        $stmt = $this->pdo->prepare($request);
+        $result = $stmt->execute($params);
+
+        return $result;
+    }
+
+    /**
+     * Execute a delete or update SQL query.
+     *
+     * @param string $request The SQL query string.
+     * @param array $params Optional. The parameters used inside the query.
+     * @return int The number of affected rows.
+     */
+    private function count_affected_query($request, $params = array()){
+        $stmt = $this->pdo->prepare($request);
+        $stmt->execute($params);
+        
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Execute an update SQL query.
+     *
+     * @param string $request The SQL query string.
+     * @param array $params Optional. The parameters used inside the query.
+     * @return int The number of affected rows.
+     */
+    public function update($request, $params = array()){ return $this->count_affected_query($request, $params); }
+
+    /**
+     * Execute a delete SQL query.
+     *
+     * @param string $request The SQL query string.
+     * @param array $params Optional. The parameters used inside the query.
+     * @return int The number of affected rows.
+     */
+    public function delete($request, $params = array()){ return $this->count_affected_query($request, $params); }
+
+}
