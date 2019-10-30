@@ -10,16 +10,16 @@ A lightweight PHP API framework.
 Clone the git repository, edit the `config/config.php` file. 
 
 ## Usage
-You will define all of the routes for your application in the `config/routes.php` file. The most basic routes simply accept a URI and a callback function:
 
 ### Routing
+You will define all of the routes for your application in the `config/routes.php` file. The most basic routes simply accept a URI and a callback function:
 
 ```php
-app('router')->get('foo', function () {
+app('router')->get('/foo', function () {
     return 'Hello World';
 });
 
-app('router')->post('foo', function () {
+app('router')->post('/foo', function () {
     //
 });
 ```
