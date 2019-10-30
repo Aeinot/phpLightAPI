@@ -111,5 +111,5 @@ The following methods can be used:
  - `select(string $request[, array $params])` : returns the results as an array.
  - `insert(string $request[, array $params])` : returns `True` if the insertion was successfull, `False` if not.
  - `update(string $request[, array $params])` : returns the number of updated rows.
- - `update(string $request[, array $params])` : returns the number of deleted rows.
+ - `delete(string $request[, array $params])` : returns the number of deleted rows.
 
