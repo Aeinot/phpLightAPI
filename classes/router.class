@@ -52,8 +52,8 @@ class Router {
         $request_method = $_SERVER['REQUEST_METHOD'];
 
         // Get the request body as an array
-        $request_input = array();
-        parse_str(file_get_contents('php://input'), $request_input);
+        $inputJSON = file_get_contents('php://input');
+        $request_input = json_decode($inputJSON, TRUE);
 
         $routes = $this->routes[$request_method];
 

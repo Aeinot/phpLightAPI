@@ -2,8 +2,5 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine on
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^index.php$ / [R=301,L]
     RewriteRule ^(.*)$ app.php [NC,L,QSA]
 </IfModule>
