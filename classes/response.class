@@ -23,6 +23,8 @@ class Response {
      * Display the response.
      */
     public function __toString(){
+        header("Access-Control-Allow-Origin: *");
+    
         if($this->isJson)
             header('Content-Type: application/json');
 
