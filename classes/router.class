@@ -50,6 +50,13 @@ class Router {
         
         // Get the HTTP method
         $request_method = $_SERVER['REQUEST_METHOD'];
+        
+        // If the method is a preflight, return 200
+        if($request_method === 'OPTIONS'){
+            header("Access-Control-Allow-Origin: *");
+            header('Access-Control-Allow-Headers: *');
+            die;
+        }
 
         // Get the request body as an array
         $inputJSON = file_get_contents('php://input');
